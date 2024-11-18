@@ -1,0 +1,21 @@
+[package]
+name = "bacon-sci"
+version = "0.16.1"
+authors = ["aftix <aftix@aftix.xyz>"]
+edition = "2021"
+license = "MIT"
+description = "Scientific computing in Rust"
+homepage = "https://github.com/aftix/bacon"
+repository = "https://github.com/aftix/bacon"
+readme = "README.md"
+keywords =["numeric", "science", "integration", "quadrature"]
+categories =["science"]
+
+[dev-dependencies]
+float-cmp = "0.9"
+rand = "0.8"
+
+[dependencies]
+
+[build-dependencies]
+phf_codegen = "0.11"

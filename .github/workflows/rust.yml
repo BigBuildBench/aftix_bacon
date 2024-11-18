@@ -1,0 +1,106 @@
+name: Rust
+
+on:
+  create:
+  push:
+    branches: [master]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build library
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        profile: [dev, release]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.profile }}
+
+      - name: Build
+        uses: clechasseur/rs-cargo@v2
+        with:
+          command: build
+          args: --profile ${{ matrix.profile }}
+
+  clippy:
+    name: Check that clippy lint passes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run Clippy
+        uses: auguwu/clippy-action@1.3.0
+        with:
+          all-features: true
+          deny: warnings
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    name: Check that tests pass
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-nextest
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo-nextest
+
+      - name: Run tests
+        uses: clechasseur/rs-cargo@v2
+        with:
+          command: nextest
+          args: run
+
+  doctest:
+    name: Check that doctests pass
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run doctests
+        uses: clechasseur/rs-cargo@v2
+        with:
+          command: test
+          args: --doc
+
+  sort:
+    name: Check that Cargo deps are listed alphabetically
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cargo-sort
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo-sort
+        uses: clechasseur/rs-cargo@v2
+        with:
+          command: sort
+          args: --workspace --no-format --check
+
